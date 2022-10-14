@@ -1,0 +1,184 @@
+\documentclass{article}
+\usepackage[letterpaper,landscape,top=.5in,bottom=.5in,right=.25in,left=.25in]{geometry}
+\usepackage{tikz}
+\usepackage{xparse}
+\usepackage{pgf}
+\usepackage{xcolor}
+\usepackage{xkeyval}
+\usetikzlibrary{patterns.meta,calc}
+\usepackage{calculator}
+\usepackage{alphalph}
+\usepackage{ifthen}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage{pgfmath}
+
+% this is just for development, it will eventually go into an .sty file
+
+
+
+\newlength{\PW} % page width
+\newlength{\PH} % page height
+\newlength{\TM} % top margin
+\newlength{\BM} % bottom margin
+\newlength{\RM} % right margin
+\newlength{\LM} % left margin
+\newlength{\THM} % total height margin
+\newlength{\TWM} % total width margin
+\newlength{\WSW} % work space width
+\newlength{\WSH} % work space height
+
+
+ 
+
+\setlength{\PW}{\paperwidth}
+\setlength{\PH}{\paperheight}
+
+\setlength{\TM}{0.5in}
+\setlength{\BM}{0.5in}
+\setlength{\RM}{0.25in}
+\setlength{\LM}{0.25in}
+
+
+
+\LENGTHADD{\TM}{\BM}{\THM}
+\LENGTHADD{\RM}{\LM}{\TWM}
+
+\LENGTHSUBTRACT{\PW}{\TWM}{\WSW}
+\LENGTHSUBTRACT{\PH}{\THM}{\WSH}
+
+\newlength{\xspace} % grid x spacing
+
+
+
+
+%simplified color creator
+\NewDocumentCommand{\GPC}{O{RGB} m m}
+{
+\definecolor{#2}{#1}{#3}
+}
+
+\GPC{EngR}{255,0,0} % engineering red
+\GPC{EngG}{0,255,0} % engineering green
+\GPC{EngB}{0,0,255} % engineering blue
+\GPC{EngC}{0,255,255} % engineering cyan
+\GPC{EngM}{255,0,255} % engineering magenta
+\GPC{EngY}{255,255,0} % engineering yellow
+
+
+
+
+% converts from length to unit
+\makeatletter
+\def\convertto#1#2{\strip@pt\dimexpr #2*65536/\number\dimexpr 1#1}
+\makeatother
+
+
+
+
+
+\newif\ifDUFL % DRAW UP FROM LEFT 
+
+\DUFLtrue
+
+%\ExplSyntaxOn
+
+
+% #1 is y spacing
+% #2 is diagonal angle
+% #3 is vertical line color
+% #4 is horizontal line color
+% #5 is diagonal line color
+\NewDocumentEnvironment{tester}{m m O{EngR} O{EngG} O{EngB}}
+{
+\NEEDED FOR COORDINATE POSITIONING
+\def\un{pt}
+
+
+\pgfmathsetlength\xspace{#1 / tan(#2)}
+\LENGTHDIVIDE{\WSW}{\xspace}{\GridXMax}
+
+% CALCULATE NUMBER OF ROWS AND COLUMNS
+\LENGTHDIVIDE{\WSH}{#1}{\GridYMax}
+\FLOOR{\GridXMax}{\GridXMax}
+\FLOOR{\GridYMax}{\GridYMax}
+%\SUBTRACT{\GridXMax}{1}{\GridXMax}
+%\SUBTRACT{\GridYMax}{1}{\GridYMax}
+\ADD{\GridXMax}{1}{\GridXMax}
+
+%\typeout{grid\space X\space spacing\space \convertto{in}{\xspace}}
+%\typeout{grid\space X\space max\space  \GridXMax}
+%\typeout{grid\space Y\space max\space  \GridYMax}
+
+% Create Coordinates
+\foreach[count=\j from 0, evaluate=\j as \yp using \j*(#1)*(-1)] \y in {0,1,...,\GridYMax}
+{
+	\foreach[count=\i from 0, evaluate=\i as \xp using \i * (#1 / tan(#2))] \x in {1,2,...,\GridXMax}
+	{
+		\def\coord{\alphalph{\x}\y} % COORDINATE NAME
+		%\typeout{\coord\space at\space(\xp\un\space , \space\yp\un)}
+		\coordinate(\coord) at (\xp\un , \yp\un);
+	}
+}
+
+
+% Draw Vertical Lines
+\foreach \y in {1,2,...,\GridYMax}
+{
+	\foreach \x in {1,2,...,\GridXMax}
+	{
+		\SUBTRACT{\y}{1}{\ym}
+		\def\col{\alphalph{\x}}
+
+		\draw[#3](\col\ym)--(\col\y);
+	}
+}
+
+%Draw Horizontal Lines
+\foreach \y in {0,1,...,\GridYMax}
+{
+	\foreach \x in {2,3,...,\GridXMax}
+	{
+		\SUBTRACT{\x}{1}{\xm}
+		\def\coorda{\alphalph{\x}\y}
+		\def\coordb{\alphalph{\xm}\y}
+		\draw[#4](\coorda)--(\coordb);
+	}
+}
+
+
+%Draw Diagonal Lines
+\foreach \y in {1,2,...,\GridYMax}
+{
+	\SUBTRACT{\y}{1}{\ym}
+	\foreach \x in {2,3,...,\GridXMax}
+	{
+	\SUBTRACT{\x}{1}{\xm}
+	
+	\ifDUFL
+		\def\cola{\alphalph{\xm}}
+		\def\colb{\alphalph{\x}}
+	\else
+		\def\cola{\alphalph{\xm}}
+		\def\colb{\alphalph{\x}}
+	\fi
+	}
+}
+
+}
+{}
+
+
+\ExplSyntaxOff
+\begin{document}
+\begin{tikzpicture}
+\begin{tester}{1in}{30}
+%\draw[black](a0)--(b0)--(a1)--(a0);
+%\draw[red](b0)--(c0)--(b1)--(a1)--(b0)--(b1);
+%\draw[black,->](a0)--(a7)--(g7)--(g0)--(a0);
+%\draw[blue,->](a1)--(b3);
+%\draw[red,->](a0)--(b3);
+%\draw[green,->](b0)--(b3);
+\end{tstr}
+\end{tikzpicture}
+\end{document}
